@@ -4,25 +4,28 @@ A JavaScript library for interacting with the Epson Connect API. This library pr
 
 ## Installation
 
-Since this library is currently not available through npm, it can be installed locally from a cloned repository:
+### From the Github repo
 
-1. Clone the repository:
-   
+To install from Github, use:
+
 ```bash
-git clone https://github.com/chriscarrollsmith/epson-connect-js.git
+npm install https://github.com/chriscarrollsmith/epson-connect-js.git#main
 ```
 
-2. Navigate into the project directory where you want to use this library and install it using npm's local path feature:
+Here's what it will look like as a dependency in `package.json`:
 
-```bash
-cd epson-connect-js
-npm install .
+```json
+{
+  "dependencies": {
+    "epson-connect-js": "github:chriscarrollsmith/epson-connect-js#main",
+  }
+}
 ```
 
 In your JavaScript files, you can now `require` the library just like any other npm package:
 
 ```javascript
-const { Client, Printer, Scanner } = require('epson-connect-js');
+const { Client } = require('epson-connect-js');
 ```
 
 ## Usage
@@ -51,7 +54,7 @@ The `initialize()` method is responsible for initiating the authentication proce
 })();
 ```
 
-Alternatively, to speed up execution, you can save the returned Promise directly with `.catch()` and await it later in your code. This is useful if you want to authenticate at application startup, but you don't need to use the printer or scanner until later. For example:
+Alternatively, to speed up execution, you can save the returned Promise directly with `.catch()` and await it later in your code. This is useful if you want to authenticate at application startup but you don't need to use the printer or scanner until later. For example:
 
 ```javascript
 // Construct the client as part of application startup
