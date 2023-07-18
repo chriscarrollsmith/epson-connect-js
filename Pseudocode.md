@@ -2,24 +2,26 @@
 
 Client.js:
 
-Import the modules AuthContext, Printer, Scanner
+- Import the modules AuthContext from './Authenticate.js', Printer from './Printer.js', Scanner from './Scanner.js'
 
 Define the class Client with:
-    - The constructor that takes the parameters: baseUrl, printerEmail, clientId, clientSecret
-        - If no baseUrl is provided, set it to the Epson Connect base URL
-        - If no printerEmail is provided, set it to the one from environment variables, throw error if not present
-        - If no clientId is provided, set it to the one from environment variables, throw error if not present
-        - If no clientSecret is provided, set it to the one from environment variables, throw error if not present
-        - Initialize an instance of AuthContext with baseUrl, printerEmail, clientId, clientSecret
 
-    - A method 'deauthenticate' that calls the '_deauthenticate' method of the 'authContext' instance
+  - The constructor that takes the parameters: printerEmail, clientId, clientSecret, baseUrl with a default value of 'https://api.epsonconnect.com'
+    - If printerEmail is not provided, get it from the environment variables, throw error if not present
+    - If clientId is not provided, get it from the environment variables, throw error if not present
+    - If clientSecret is not provided, get it from the environment variables, throw error if not present
+    - Initialize an instance of AuthContext (authContext) with baseUrl, printerEmail, clientId, clientSecret
 
-    - A getter 'printer' that creates a new Printer instance using the 'authContext' instance
+  - A method 'initialize' that calls the '_initialize' method of the 'authContext' instance
 
-    - A getter 'scanner' that creates a new Scanner instance using the 'authContext' instance
+  - A method 'deauthenticate' that calls the '_deauthenticate' method of the 'authContext' instance
+
+  - A getter 'printer' that creates and returns a new Printer instance using the 'authContext' instance
+
+  - A getter 'scanner' that creates and returns a new Scanner instance using the 'authContext' instance
 
 Define the class ClientError which extends the base Error class:
-    - The constructor takes a parameter 'message' and sets its 'name' property to 'ClientError'
+  - The constructor takes a parameter 'message' and sets its 'name' property to 'ClientError'
 
 Export the classes Client and ClientError
 
@@ -27,148 +29,157 @@ Export the classes Client and ClientError
 
 Authenticate.js:
 
-Import the axios and moment libraries.
+- Import the axios and moment libraries, and the utility function extractKeyValuePairs from './Utils.js'
 
 Define the class AuthContext with:
 
-A constructor method that takes baseUrl, printerEmail, clientId, clientSecret as parameters, initializes several instance variables, and calls the _auth method to authenticate.
+  - The constructor that takes the parameters: baseUrl, printerEmail, clientId, clientSecret and initializes several instance variables: baseUrl, printerEmail, clientId, clientSecret, expiresAt, accessToken, refreshToken, and subjectId
 
-A method _auth that:
+  - A private method '_initialize' that calls the '_auth' method
 
-Checks if the current time is after the expiration of the access token.
-If so, it defines headers and authentication details, sets up a request payload depending on whether an access token already exists or not.
-Sends a POST request to a given endpoint to retrieve an access token.
-If there's an error, it throws an AuthenticationError.
-If it's the first time authenticating, it sets the refresh token.
-Sets the new expiry time, access token, and subjectId.
-A method _deauthenticate that sends a DELETE request to a specified endpoint to deauthenticate.
+  - A private method '_auth' that:
+    - Checks if the current access token expiry time is after the current moment
+    - Defines headers and authentication details
+    - Prepares a request payload depending on whether an access token already exists or not
+    - Sends a POST request to a given endpoint to retrieve an access token
+    - If there's an error, it throws an AuthenticationError
+    - If it's the first time authenticating, it sets the refresh token
+    - Updates the expiry time, access token, and subjectId
 
-A method send that:
+  - A private method '_deauthenticate' that sends a DELETE request to a specified endpoint to deauthenticate
 
-Checks if 'auth' is null, if so calls the _auth method.
-Defines default headers if 'headers' is null.
-Sends an HTTP request with the provided parameters.
-If there's an error in the response, it throws an ApiError.
-Returns the response data.
-A getter defaultHeaders that returns a default headers object with the access token.
+  - A method 'send' that:
+    - Checks if 'auth' is not provided, if so calls the '_auth' method
+    - Defines default headers if 'headers' is not provided
+    - Sends an HTTP request with the provided parameters
+    - If there's an error in the response, it throws an ApiError
+    - Returns the response data
 
-A getter deviceId that returns the subjectId.
+  - A getter 'defaultHeaders' that returns a default headers object with the access token
+
+  - A getter 'deviceId' that returns the subjectId
 
 Define the class AuthenticationError which extends the base Error class:
+  - The constructor takes a parameter 'message' and sets its 'name' property to 'AuthenticationError'
 
-A constructor that takes a parameter 'message' and sets its 'name' property to 'AuthenticationError'.
 Define the class ApiError which extends the base Error class:
+  - The constructor takes a parameter 'message' and sets its 'name' property to 'ApiError'
 
-A constructor that takes a parameter 'message' and sets its 'name' property to 'ApiError'.
-Export the classes AuthContext, AuthenticationError, and ApiError.
+Export the classes AuthContext, AuthenticationError, and ApiError
 
 ------------------
 
 Printer.js:
 
-Import the modules URL, URLSearchParams, fs, AuthContext, mergeWithDefaultSettings, validateSettings
+Import required modules: URL, URLSearchParams from 'url', fs from 'fs', AuthContext from 'Authenticate.js', and mergeWithDefaultSettings, validateSettings from 'PrinterSettings'.
 
-Define the class Printer with:
-- The constructor that takes the parameter: authContext
-    - Throws an error if authContext is not an instance of AuthContext
-    - Stores authContext into an instance variable
-    - Defines a set of VALID_EXTENSIONS and VALID_OPERATORS
+Define the Printer class with:
 
-- A getter 'deviceId' that returns the deviceId from the 'authContext' instance
+- A constructor that accepts an authContext argument. It throws a PrinterError if the authContext is not an instance of AuthContext. It also initializes the VALID_EXTENSIONS and VALID_OPERATORS sets.
 
-- A method 'capabilities' that:
-    - Builds a path using the deviceId
-    - Sends a GET request to the Epson Connect API using the built path
+- A getter method 'deviceId' that retrieves the deviceId from the authContext instance.
 
-- A method 'printSetting' that:
-    - Validates the settings
-    - Builds a path using the deviceId
-    - Sends a POST request to the Epson Connect API using the built path and the settings
+- The method 'capabilities(mode)' which fetches the capabilities of the printer for a specified mode by sending a GET request to a specific endpoint.
 
-- A method 'uploadFile' that:
-    - Checks if the file extension is valid, throws an error if not
-    - Modifies the given URL to include additional query parameters
-    - Reads the content of the file into a buffer
-    - Sends a POST request to the Epson Connect API using the built path and the file content
+- The method 'printSetting(settings)' that validates and merges provided settings with default settings, sends them to a specific endpoint via a POST request, and adds the settings object to the returned response.
 
-- A method 'executePrint' that:
-    - Builds a path using the deviceId and the jobId
-    - Sends a POST request to the Epson Connect API using the built path
+- The method 'uploadFile(uploadUri, filePath, printMode)' that validates the extension of the file, reads the file content, and sends it to the provided upload URI via a POST request.
 
-- A method 'print' that:
-    - Merges the settings with the default settings
-    - Calls the 'printSetting', 'uploadFile', and 'executePrint' methods
-    - Returns the jobId
+- The method 'executePrint(jobId)' that sends a POST request to execute a print job.
 
-- A method 'cancelPrint' that:
-    - Checks if the operator is valid, throws an error if not
-    - Retrieves the job info and checks its status, throws an error if not in ['pending', 'pending_held']
-    - Builds a path using the deviceId and the jobId
-    - Sends a POST request to the Epson Connect API using the built path and the operator
+- The method 'print(filePath, settings = {})' that initiates a print process by calling 'printSetting', 'uploadFile', and 'executePrint' methods sequentially, and finally returns the jobId.
 
-- A method 'jobInfo' that:
-    - Builds a path using the deviceId and the jobId
-    - Sends a GET request to the Epson Connect API using the built path
+- The method 'cancelPrint(jobId, operatedBy = 'user')' that validates the operator, checks the job status and if it's cancelable, then sends a POST request to cancel the job.
 
-- A method 'info' that:
-    - Builds a path using the deviceId
-    - Sends a GET request to the Epson Connect API using the built path
+- The method 'jobInfo(jobId)' that retrieves information about a specific job by sending a GET request.
 
-- A method 'notification' that:
-    - Builds a path using the deviceId
-    - Sends a POST request to the Epson Connect API using the built path and the notification settings
+- The method 'info()' that retrieves information about the printer by sending a GET request.
 
-Define the class PrinterError which extends the base Error class
+- The method 'notification(callbackUri, enabled = true)' that sets up notifications by sending a POST request with notification settings.
 
-Export the classes Printer and PrinterError
+Define the PrinterError class, which extends the built-in Error class.
+
+Finally, export the Printer and PrinterError classes.
 
 ------------------
 
 PrinterSettings.js:
 
-Define several Set constants: 
-    - VALID_PRINT_MODES: 'document', 'photo'
-    - VALID_MEDIA_SIZES: 'ms_a3', 'ms_a4', etc.
-    - VALID_MEDIA_TYPES: 'mt_plainpaper', 'mt_photopaper', etc.
-    - VALID_PRINT_QUALITIES: 'high', 'normal', 'draft'
-    - VALID_PAPER_SOURCES: 'auto', 'rear', etc.
-    - VALID_COLOR_MODES: 'color', 'mono'
-    - VALID_TWO_SIDE: 'none', 'long', 'short'
+1. Define several Set constants for different printer settings:
+    - VALID_PRINT_MODES: contains 'document', 'photo'
+    - VALID_MEDIA_SIZES: contains 'ms_a3', 'ms_a4', 'ms_a5', etc.
+    - VALID_MEDIA_TYPES: contains 'mt_plainpaper', 'mt_photopaper', 'mt_hagaki', etc.
+    - VALID_PRINT_QUALITIES: contains 'high', 'normal', 'draft'
+    - VALID_PAPER_SOURCES: contains 'auto', 'rear', 'front1', etc.
+    - VALID_COLOR_MODES: contains 'color', 'mono'
+    - VALID_TWO_SIDE: contains 'none', 'long', 'short'
 
-Define a function generateRandomString(length) that generates a random string of a given length
+2. Define a function called `generateRandomString(length)`:
+    - The function generates a random string of a specified length.
 
-Define a function mergeWithDefaultSettings(settings = {}) that:
-    - Combines user-supplied print settings with default values
-    - Returns the merged settings object
+3. Define a function `mergeWithDefaultSettings(settings = {})`:
+    - The function combines user-supplied print settings with default values.
+    - If the user does not supply a certain setting, the function uses a default value.
+    - The function returns the combined settings object.
 
-Define a function validateSettings(settings = {}) that:
-    - Validates the settings based on the valid constants
-    - Throws a PrintSettingError if a setting is invalid
+4. Define a function `validateSettings(settings = {})`:
+    - The function validates the user-supplied settings based on the valid constants defined at the start of the module.
+    - If a setting is invalid, the function throws a `PrintSettingError`.
+    - It checks for valid keys, length of job name, print mode, media size, media type, boolean checks for borderless and reverse order, and the rest of the print settings.
+    - It has specific checks for print mode with reverse order, and two-sided printing with collation.
 
-Define the class PrintSettingError which extends the base Error class:
-    - The constructor takes a parameter 'message' and sets its 'name' property to 'PrintSettingError'
+5. Define a class `PrintSettingError` which extends the built-in JavaScript `Error` class:
+    - The constructor of this class accepts a `message` parameter.
+    - It sets its own `name` property to 'PrintSettingError'.
 
-Export the functions mergeWithDefaultSettings, validateSettings and the class PrintSettingError
+6. The module exports the following: `mergeWithDefaultSettings` function, `validateSettings` function, and the `PrintSettingError` class.
 
 ------------------
 
 Scanner.js:
 
-Import the AuthContext from './authenticate'
+1. Import `AuthContext` from './Authenticate'
 
-Define the class Scanner with methods:
-- constructor(authContext): takes in an AuthContext object as a parameter, throws a ScannerError if the provided argument is not an instance of AuthContext. Initializes a _authContext, _path, _destination_cache, and VALID_DESTINATION_TYPES properties on the instance.
+2. Define a class `Scanner` with the following methods and properties:
 
-- list(): an async method that uses the _authContext to send a get request to the _path
+   - `constructor(authContext)`: Takes in an `AuthContext` object as a parameter. Throws a `ScannerError` if the provided argument is not an instance of `AuthContext`. Initializes a `_authContext`, `_path`, `_destination_cache`, and `VALID_DESTINATION_TYPES` properties on the instance.
 
-- add(name, destination, type_ = 'mail'): an async method that takes name, destination, and type_ as parameters, validates the destination using the _validateDestination method, prepares a data object, and sends a post request to _path using _authContext. Also, it adds the response to the _destination_cache
+   - `VALID_DESTINATION_TYPES`: A Set that contains 'mail' and 'url' as valid types of scan destinations.
 
-- update(id_, name = null, destination = null, type_ = null): an async method that updates a destination in the cache, validates the destination, sends a post request to update the destination and replaces the updated destination in the cache
+   - `list()`: An asynchronous method that uses the `_authContext` to send a 'GET' request to the `_path`.
 
-- remove(id_): an async method that deletes a destination by sending a delete request to the _path and removes it from the _destination_cache
+   - `add(name, destination, type_ = 'mail')`: An asynchronous method that adds a new scan destination. It takes `name`, `destination`, and `type_` as parameters, validates these using the `_validateDestination` method, prepares a data object, and sends a 'POST' request to `_path` using `_authContext`. It then adds the response to the `_destination_cache`.
 
-- _validateDestination(name, destination, type_): a private method that validates the name, destination, and type_ parameters according to specific rules. Throws a ScannerError if any validation fails.
+   - `update(id_, name = null, destination = null, type_ = null)`: An asynchronous method that updates a scan destination. It retrieves the scan destination from the `_destination_cache` based on the `id_`, validates the `name`, `destination`, and `type_`, prepares a data object, and sends a 'POST' request to update the scan destination. It then replaces the updated scan destination in the `_destination_cache`.
 
-Define the class ScannerError that extends the base Error class.
+   - `remove(id_)`: An asynchronous method that deletes a scan destination. It sends a 'DELETE' request to the `_path` and removes the scan destination from the `_destination_cache`.
 
-Export the Scanner and ScannerError classes.
+   - `_validateDestination(name, destination, type_)`: A private method that validates the `name`, `destination`, and `type_` parameters according to specific rules. If any of the validations fails, it throws a `ScannerError`.
+
+3. Define a class `ScannerError` that extends the base `Error` class.
+
+4. Export the `Scanner` and `ScannerError` classes.
+
+------------------
+
+Utils.js:
+
+1. Define a function `extractKeyValuePairs(obj, keysToExtract)`, which extracts key-value pairs from a nested object where the key is in `keysToExtract`. It takes two arguments, `obj` and `keysToExtract`.
+
+   - Create an empty array `result` to store the final key-value pairs, and a `seenObjects` WeakSet to avoid circular references.
+
+   - Define a nested function `extractPairsRecursive(obj, path = '')` that takes `obj` and `path` as arguments. This function iterates through each key-value pair of the object:
+
+       - If `obj` is already in `seenObjects`, the function returns early to avoid infinite loops due to circular references. Otherwise, it adds `obj` to `seenObjects`.
+
+       - It constructs the `currentPath` by concatenating the `path` and the `key`. If `path` is empty, `currentPath` equals `key`.
+
+       - If `currentPath` is in `keysToExtract`, it pushes an object with `key` and `value` into `result`.
+
+       - If the `value` is a non-null object, it recursively calls `extractPairsRecursive` on `value` with `currentPath`.
+
+   - Call `extractPairsRecursive` on the input `obj`.
+
+   - After finishing the recursive traversal, return `result`.
+
+2. Export the `extractKeyValuePairs` function.

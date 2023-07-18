@@ -255,6 +255,8 @@ The notification HTTP body will look like this:
 }
 ```
 
+This functionality has not yet been tested. We welcome your contributions to improve it or to add unit tests.
+
 ### Scanner
 
 The `Scanner` class provides methods for interacting with an Epson scanner. These methods have not yet been tested. We welcome your contributions to improve them or to add unit tests.
