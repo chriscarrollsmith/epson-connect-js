@@ -19,7 +19,8 @@ class Scanner {
   }
   
   async list() {
-    return this._authContext.send('get', this._path);
+    const response = await this._authContext.send('get', this._path);
+    return response;
   }
   
   async add(name, destination, type_ = 'mail') {

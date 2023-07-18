@@ -287,11 +287,3 @@ scanner.remove(id);
 ## Error Handling
 
 The library defines a set of custom error types (`ClientError`, `AuthenticationError`, `ApiError`, `PrinterError`, `PrintSettingError`, `ScannerError`) to provide detailed error information.
-
-## Testing
-
-You can run the test suite using the following command:
-
-```bash
-npm run test
-```
