@@ -4,6 +4,14 @@ A JavaScript library for interacting with the Epson Connect API. This library pr
 
 ## Installation
 
+### From npm
+
+To install using the `npm` package manager, use:
+
+```bash
+npm install epson-connect-js
+```
+
 ### From the Github repo
 
 To install from Github, use:
@@ -22,22 +30,21 @@ Here's what it will look like as a dependency in `package.json`:
 }
 ```
 
-In your JavaScript files, you can now `require` the library just like any other npm package:
-
-```javascript
-const { Client } = require('epson-connect-js');
-```
-
 ## Usage
 
 This library provides a set of classes that correspond to the different aspects of the Epson Connect API. The `Client` class is the primary interface for interacting with the API, and it manages authentication and provides access to printer and scanner functionality. The `Printer` and `Scanner` classes provide methods for interacting with the printer and scanner functionalities of the API respectively. Please ensure you have a good understanding of the asynchronous nature of JavaScript to effectively use this library, as many operations rely on Promises and should be properly awaited or handled.
 
 ### Client
 
-The `initialize()` method is responsible for initiating the authentication process, and it must be awaited, as it's an asynchronous operation.
+In your JavaScript files, `import` or `require` the `Client` module from the library as follows:
 
 ```javascript
-(async () => {
+const { Client } = require('epson-connect-js');
+```
+
+You will need to construct an object of the `Client` class with the arguments `printerEmail`, `clientId`, `clientSecret`. Alternatively, you can set the environment variables `EPSON_CONNECT_API_PRINTER_EMAIL`,`EPSON_CONNECT_API_CLIENT_ID`, and `EPSON_CONNECT_API_CLIENT_SECRET`. Note that you will have to register for a license with the [Epson Connect API](https://www.epsondevelopers.com/api/epson-connect/) in order to obtain these credentials. (The `baseUrl` argument of the `Client` class is optional, and if not provided, the default value of `https://api.epsonconnect.com` will be used.)
+
+```javascript
   // printerEmail, clientId, and clientSecret must be obtained from Epson
   const printerEmail = 'printerid@someemail.com' 
   const clientId = 'someclientid'
@@ -46,7 +53,12 @@ The `initialize()` method is responsible for initiating the authentication proce
 
   // If no baseUrl is provided, the default will be 'https://api.epsonconnect.com'
   const client = new Client(printerEmail, clientId, clientSecret, baseUrl); 
+  ```
 
+The `initialize()` method of the `Client` class is responsible for initiating the authentication process, and it must be awaited, as it's an asynchronous operation.
+
+```javascript
+(async () => {
   // Initiate the authentication process
   await client.initialize();
 
