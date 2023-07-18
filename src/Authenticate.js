@@ -2,7 +2,6 @@
 
 const axios = require('axios');
 const moment = require('moment');
-const { extractKeyValuePairs } = require('./Utils.js');
 
 class AuthContext {
   constructor(baseUrl, printerEmail, clientId, clientSecret) {
