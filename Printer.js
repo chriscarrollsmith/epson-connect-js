@@ -41,7 +41,7 @@ class Printer {
   
   async capabilities(mode) {
     const path = `/api/1/printing/printers/${this.deviceId}/capability/${mode}`;
-    const response = this._authContext.send('get', path);
+    const response = await this._authContext.send('get', path);
 
     return response;
   }
@@ -50,7 +50,7 @@ class Printer {
     settings = mergeWithDefaultSettings(settings);
     validateSettings(settings);
     const path = `/api/1/printing/printers/${this.deviceId}/jobs`;
-    const response = this._authContext.send('post', path, settings);
+    const response = await this._authContext.send('post', path, settings);
 
     return response;
   }
@@ -64,7 +64,7 @@ class Printer {
     const urlObj = new URL(uploadUri);
     const qDict = Object.fromEntries(urlObj.searchParams.entries());
     qDict.Key = qDict.Key;
-    qDict.File = `1${extension}`;
+    qDict.File = `1.${extension}`;
     urlObj.search = new URLSearchParams(qDict).toString();
     const path = urlObj.pathname + urlObj.search;
     
@@ -78,7 +78,7 @@ class Printer {
   
   async executePrint(jobId) {
     const path = `/api/1/printing/printers/${this.deviceId}/jobs/${jobId}/print`;
-    const response = this._authContext.send('post', path);
+    const response = await this._authContext.send('post', path);
 
     return response;
   }
@@ -101,28 +101,28 @@ class Printer {
     }
     
     const path = `/api/1/printing/printers/${this.deviceId}/jobs/${jobId}/cancel`;
-    const response = this._authContext.send('post', path, { operated_by: operatedBy });
+    const response = await this._authContext.send('post', path, { operated_by: operatedBy });
 
     return response;
   }
   
-  jobInfo(jobId) {
+  async jobInfo(jobId) {
     const path = `/api/1/printing/printers/${this.deviceId}/jobs/${jobId}`;
-    const response =  this._authContext.send('get', path);
+    const response = await this._authContext.send('get', path);
 
     return response;
   }
   
-  info() {
+  async info() {
     const path = `/api/1/printing/printers/${this.deviceId}`;
-    const response =  this._authContext.send('get', path);
+    const response = await this._authContext.send('get', path);
 
     return response;
   }
   
-  notification(callbackUri, enabled = true) {
+  async notification(callbackUri, enabled = true) {
     const path = `/api/1/printing/printers/${this.deviceId}/settings/notifications`;
-    const response = this._authContext.send('post', path, { notification: enabled, callback_uri: callbackUri });
+    const response = await this._authContext.send('post', path, { notification: enabled, callback_uri: callbackUri });
 
     return response;
   }

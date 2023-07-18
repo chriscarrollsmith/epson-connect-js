@@ -118,6 +118,16 @@ printer.print('/path/to/file.pdf', {})
   .catch(error => console.error(error));
 ```
 
+#### Getting Printer Info
+
+To get general information about the printer, use the `info()` method:
+
+```javascript
+printer.info()
+  .then(info => console.log(info))
+  .catch(error => console.error(error));
+```
+
 #### Retrieve Printer Capabilities
 
 To retrieve the printer capabilities, use the `capabilities(mode)` method, where the `mode` argument is either 'document' or 'photo':
@@ -224,16 +234,6 @@ To cancel a print job, use the `cancelPrint(jobId, operatedBy)` method:
 ```javascript
 printer.cancelPrint(jobData.upload_uri, 'user')
   .then(response => console.log(response))
-  .catch(error => console.error(error));
-```
-
-#### Getting Printer Info
-
-To get general information about the printer, use the `info()` method:
-
-```javascript
-printer.info()
-  .then(info => console.log(info))
   .catch(error => console.error(error));
 ```
 

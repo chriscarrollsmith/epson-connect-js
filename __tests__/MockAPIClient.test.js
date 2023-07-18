@@ -44,7 +44,7 @@ test('Client Initialization and Authentication', async () => {
       return [200, mockResponse];
     });
 
-    const client = new Client(baseUrl = '', printerEmail = 'testemail', clientId = 'testid', clientSecret = 'testsecret');
+    const client = new Client(printerEmail = 'testemail', clientId = 'testid', clientSecret = 'testsecret');
     await client.initialize();
 
     // Assert that these values are not empty or null

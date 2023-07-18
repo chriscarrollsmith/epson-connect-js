@@ -70,24 +70,23 @@ const VALID_PRINT_MODES = new Set([
   
   function mergeWithDefaultSettings(settings = {}) {
     settings.job_name = settings.job_name || `job-${generateRandomString(8)}`;
-  
     settings.print_mode = settings.print_mode || 'document';
-  
+    
     settings.print_setting = settings.print_setting || {};
   
+    // No need to check for Object.keys(printSetting).length !== 0 anymore
     const printSetting = settings.print_setting;
-    if (Object.keys(printSetting).length !== 0) {
-      printSetting.media_size = printSetting.media_size || 'ms_a4';
-      printSetting.media_type = printSetting.media_type || 'mt_plainpaper';
-      printSetting.borderless = printSetting.borderless || false;
-      printSetting.print_quality = printSetting.print_quality || 'normal';
-      printSetting.source = printSetting.source || 'auto';
-      printSetting.color_mode = printSetting.color_mode || 'color';
-      printSetting.two_sided = printSetting.two_sided || 'none';
-      printSetting.reverse_order = printSetting.reverse_order || false;
-      printSetting.copies = printSetting.copies || 1;
-      printSetting.collate = printSetting.collate === undefined ? true : printSetting.collate;
-    }
+    
+    printSetting.media_size = printSetting.media_size || 'ms_a4';
+    printSetting.media_type = printSetting.media_type || 'mt_plainpaper';
+    printSetting.borderless = printSetting.borderless || false;
+    printSetting.print_quality = printSetting.print_quality || 'normal';
+    printSetting.source = printSetting.source || 'auto';
+    printSetting.color_mode = printSetting.color_mode || 'color';
+    printSetting.two_sided = printSetting.two_sided || 'none';
+    printSetting.reverse_order = printSetting.reverse_order || false;
+    printSetting.copies = printSetting.copies || 1;
+    printSetting.collate = printSetting.collate === undefined ? true : printSetting.collate;
   
     return settings;
   }

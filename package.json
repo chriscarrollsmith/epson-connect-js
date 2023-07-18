@@ -4,7 +4,7 @@
   "description": "",
   "main": "Client.js",
   "scripts": {
-    "test": "jest liveAPI.test.js"
+    "test": "jest Mock"
   },
   "keywords": [],
   "author": "",

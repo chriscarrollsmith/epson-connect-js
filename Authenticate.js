@@ -1,7 +1,8 @@
 // Authenticate.js
 
 const axios = require('axios');
-const moment = require('moment'); // a library for handling date and time
+const moment = require('moment');
+const { extractKeyValuePairs } = require('./Utils.js');
 
 class AuthContext {
   constructor(baseUrl, printerEmail, clientId, clientSecret) {
@@ -84,32 +85,43 @@ class AuthContext {
     if (!auth) {
       this._auth();
     }
-
+  
     headers = headers || this.defaultHeaders;
-
+    const request = {
+      method: method,
+      url: this.baseUrl + path,
+      headers: headers,
+      data: data,
+      auth: auth,
+    };
+  
+    console.log(`${method} ${path} data=${JSON.stringify(data)} headers=${JSON.stringify(headers)} auth=${!!auth}`);
+  
     try {
-      const resp = await axios({
-        method: method,
-        url: this.baseUrl + path,
-        headers: headers,
-        data: data,
-        auth: auth,
-      });
-
+      const resp = await axios(request);
+      let respData = resp.data;
+  
+      // Handle if response is not JSON
+      if (resp.headers && resp.headers['content-type'] && resp.headers['content-type'].indexOf('application/json') === -1) {
+        respData = { code: resp.data.toString() };
+      }
+  
+      console.log(`resp=${JSON.stringify(respData)}`);
+  
       if (!resp) {
         throw new ApiError('No response received from server');
       } 
-
-      if (resp.data.code) {
-        throw new ApiError(resp.data.code);
+  
+      if (respData && respData.code) {
+        throw new ApiError(respData.code);
       }
-
-      if (!resp.data || Object.keys(resp.data).length === 0) {
+  
+      if (!respData || Object.keys(respData).length === 0) {
         return { message: 'Request was successful, but no data was returned.' };
       } 
-
-      return resp.data;
-
+  
+      return respData;
+  
     } catch (error) {
       // Re-throw the error to be handled in higher scopes
       throw error;
