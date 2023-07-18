@@ -95,7 +95,8 @@ class AuthContext {
       auth: auth,
     };
   
-    console.log(`${method} ${path} data=${JSON.stringify(data)} headers=${JSON.stringify(headers)} auth=${!!auth}`);
+    // Uncomment to debug requests
+    // console.log(`${method} ${path} data=${JSON.stringify(data)} headers=${JSON.stringify(headers)} auth=${!!auth}`);
   
     try {
       const resp = await axios(request);
@@ -106,7 +107,8 @@ class AuthContext {
         respData = { code: resp.data.toString() };
       }
   
-      console.log(`resp=${JSON.stringify(respData)}`);
+      // Uncomment to debug requests
+      // console.log(`resp=${JSON.stringify(respData)}`);
   
       if (!resp) {
         throw new ApiError('No response received from server');

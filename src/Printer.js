@@ -52,6 +52,9 @@ class Printer {
     const path = `/api/1/printing/printers/${this.deviceId}/jobs`;
     const response = await this._authContext.send('post', path, settings);
 
+    // Add settings object to the response
+    response.settings = settings;
+
     return response;
   }
   
@@ -85,7 +88,7 @@ class Printer {
   
   async print(filePath, settings = {}) {
     const jobData = await this.printSetting(settings);
-    await this.uploadFile(jobData.upload_uri, filePath, finalSettings.print_mode);
+    await this.uploadFile(jobData.upload_uri, filePath, jobData.settings.print_mode);
     await this.executePrint(jobData.id);
     return jobData.id;
   }

@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { Client } = require('../Client.js');
+const { Client } = require('epson-connect-js');
 
 // Set the timeout for each test to 30 seconds
 jest.setTimeout(30000);
@@ -52,6 +52,7 @@ test('Define Print Job Settings', async () => {
         constjobData = await printer.printSetting(settings);
         expect(jobData.id).toBeTruthy();
         expect(jobData.upload_uri).toBeTruthy();
+        expect(jobData.settings).toBeTruthy();
     } catch (error) {
         console.error("Error defining print job settings: ", error);
         throw error;  // if an error is caught, fail the test by throwing the error

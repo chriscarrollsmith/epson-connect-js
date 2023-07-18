@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { Client } = require('../Client.js');
+const { Client } = require('epson-connect-js');
 
 // Create variables to hold the client, printer, and scanner
 let client;

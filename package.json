@@ -1,10 +1,10 @@
 {
   "name": "epson-connect-js",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "",
-  "main": "Client.js",
+  "main": "src/Client.js",
   "scripts": {
-    "test": "jest Mock"
+    "test": "jest LiveAPIPrint.test.js"
   },
   "keywords": [],
   "author": "",

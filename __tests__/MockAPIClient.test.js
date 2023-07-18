@@ -5,7 +5,7 @@ const axios = require('axios');
 const MockAdapter = require('axios-mock-adapter');
 
 // Import the Client class from Client.js
-const { Client } = require('../Client.js');
+const { Client } = require('epson-connect-js');
 
 // This sets the mock adapter on the default instance
 var mock = new MockAdapter(axios);

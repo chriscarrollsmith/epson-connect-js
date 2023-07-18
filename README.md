@@ -16,7 +16,7 @@ git clone https://github.com/chriscarrollsmith/epson-connect-js.git
 
 ```bash
 cd epson-connect-js
-npm install epson-connect-js
+npm install .
 ```
 
 In your JavaScript files, you can now `require` the library just like any other npm package:
@@ -36,6 +36,11 @@ The `initialize()` method is responsible for initiating the authentication proce
 ```javascript
 (async () => {
   // printerEmail, clientId, and clientSecret must be obtained from Epson
+  const printerEmail = 'printerid@someemail.com' 
+  const clientId = 'someclientid'
+  const clientSecret = 'someclientsecret'
+  const baseUrl = 'https://api.epsonconnect.com'
+
   // If no baseUrl is provided, the default will be 'https://api.epsonconnect.com'
   const client = new Client(printerEmail, clientId, clientSecret, baseUrl); 
 
@@ -78,13 +83,11 @@ const scanner = client.scanner;
 // Use printer or scanner to perform printing/scanning operations here
 ```
 
-When the application is about to close or no longer needs the client, you can deauthenticate. The `deauthenticate()` method clears any active authentication sessions, and it also should be awaited or handled with `.catch()`, as it's also asynchronous. For example:
+When the application is about to close or no longer needs the client, you can deauthenticate. The `deauthenticate()` method clears any active authentication sessions, and it also should be awaited, as it's also asynchronous.
 
 ```javascript
 // When the application is about to close or no longer needs the client, you can deauthenticate
-client.deauthenticate().catch((error) => {
-  console.error('Error deauthenticating client:', error);
-});
+await client.deauthenticate()
 ```
 
 ### Printer
@@ -106,46 +109,17 @@ Then, get the `Printer` instance:
 const printer = client.printer;
 ```
 
-You can now interact with the printer. Here are some examples:
+You can now interact with the printer. Remember, each `printer` method returns a promise which should be properly handled to ensure error situations are adequately addressed. Use `then-catch` or `async-await` with a try-catch block to handle the promises. Here are some examples:
 
 #### Handle a Complete Print Operation with a Single Method
 
 The simplest way to execute a complete print operation, including setting up the print job, uploading the file, and executing the print job, is the `print(filePath, settings)` method:
 
 ```javascript
-printer.print('/path/to/file.pdf', {})
-  .then(jobId => console.log(`Print job ${jobId} started`))
-  .catch(error => console.error(error));
-```
+// Set the path of the file to print
+const filePath = './path/to/file.pdf'
 
-#### Getting Printer Info
-
-To get general information about the printer, use the `info()` method:
-
-```javascript
-printer.info()
-  .then(info => console.log(info))
-  .catch(error => console.error(error));
-```
-
-#### Retrieve Printer Capabilities
-
-To retrieve the printer capabilities, use the `capabilities(mode)` method, where the `mode` argument is either 'document' or 'photo':
-
-```javascript
-printer.capabilities('document')
-  .then(response => console.log(response))
-  .catch(error => console.error(error));
-```
-
-#### Setting Up Print Job
-
-To set up a print job, you need to define a `settings` object which contains your printer settings. Each setting has default values that are automatically applied if not explicitly set. We also have validation in place to ensure your settings are correct and will be accepted by the printer. 
-
-Here's how to set up a print job:
-
-```javascript
-// Define your settings
+// Define your print job settings
 let settings = {
   job_name: "MyFirstPrintJob",
   print_mode: "document",
@@ -163,18 +137,40 @@ let settings = {
   }
 };
 
-// Use the printer instance to set up a print job and capture the jobData object
-let jobData;
-printer.printSetting(settings)
-  .then(response => {
-    console.log(response);
-    jobData = response.id; // Save the jobData for future use
-  })
-  .catch(error => console.error(error));
-
+// Execute the print operation
+const jobId = await printer.print(filePath, settings)
 ```
 
-Note that calling printSetting before printing is mandatory, and that you must capture the `jobData` returned by the printSetting call for use in other functions. `jobData` is an object that contains `id` and `upload_uri` properties. The `id` property is a unique job ID, and the `upload_uri` property is the URI to which you will upload the file to be printed for this job.
+This method returns a `jobId` which can be used to get information about the print job or cancel the print job (see below).
+
+#### Getting Printer Info
+
+To get general information about the printer, use the `info()` method:
+
+```javascript
+const response = await printer.info()
+```
+
+#### Retrieve Printer Capabilities
+
+To retrieve the printer capabilities, use the `capabilities(mode)` method, where the `mode` argument is either 'document' or 'photo':
+
+```javascript
+const response = printer.capabilities(mode='document')
+```
+
+#### Setting Up Print Job
+
+To set up a print job, you need to define a `settings` object which contains your printer settings, as shown in the section above titled 'Handle a Complete Print Operation with a Single Method'. Each setting has default values that are automatically applied if not explicitly set. We also have validation in place to ensure your settings are correct and will be accepted by the printer. 
+
+Then call the printSetting method and capture the response.
+
+```javascript
+// Use the printer instance to set up a print job and capture the jobData object
+const jobData = await printer.printSetting(settings)
+```
+
+Note that calling printSetting before printing is mandatory, and that you must capture the `jobData` returned by the printSetting call for use in other functions. `jobData` is an object that contains `id`, `upload_uri`, and `settings` properties. The `id` property is a unique job ID, and the `upload_uri` property is the URI to which you will upload the file to be printed for this job. The `settings` property is the `settings` object you passed in, but with any default values applied.
 
 The `settings` object can contain the following parameters:
 
@@ -202,29 +198,27 @@ The validation process ensures that all settings are in acceptable formats and v
 To upload a file to be printed, use the `uploadFile(uploadUri, filePath, printMode)` method, where printMode is 'document' or 'photo':
 
 ```javascript
-printer.uploadFile(uploadUri = jobData.upload_uri, '/path/to/file.pdf', 'document')
-  .then(response => console.log(response))
-  .catch(error => console.error(error));
+const uploadUri = jobData.upload_uri
+const filePath = '/path/to/file.jpg'
+const printMode = 'photo'
+
+await printer.uploadFile(uploadUri, filePath, printMode)
 ```
 
 #### Executing Print Job
 
-To execute a print job, use the `executePrint(jobId)` method:
+To execute a print job, use the `executePrint(jobId)` method
 
 ```javascript
-printer.executePrint(jobData.id)
-  .then(response => console.log(response))
-  .catch(error => console.error(error));
+const response = await printer.executePrint(jobId=jobData.id)
 ```
 
 #### Getting Print Job Info
 
-To get the information about a print job, use the `jobInfo(jobId)` method:
+To get the information about a print job you've executed, use the `jobInfo(jobId)` method. Note that this endpoint will only work *after* you've executed a print job.
 
 ```javascript
-printer.jobInfo(jobData.id)
-  .then(response => console.log(response))
-  .catch(error => console.error(error));
+const response = await printer.jobInfo(jobData.id)
 ```
 
 #### Cancelling Print Job
@@ -232,28 +226,38 @@ printer.jobInfo(jobData.id)
 To cancel a print job, use the `cancelPrint(jobId, operatedBy)` method:
 
 ```javascript
-printer.cancelPrint(jobData.upload_uri, 'user')
-  .then(response => console.log(response))
-  .catch(error => console.error(error));
+await printer.cancelPrint(jobId=jobData.upload_uri, operatedBy='user')
 ```
 
 #### Setting Up Notifications
 
-To set up notifications for the printer events, use the `notification(callbackUri, enabled)` method:
+To set up notifications for printer events, use the `notification(callbackUri, enabled)` method:
 
 ```javascript
-printer.notification(callbackUri, true)
-  .then(response => console.log(response))
-  .catch(error => console.error(error));
+const callbackUri = 'http://example.com/webhook'
+const enabled = true
+
+await printer.notification(callbackUri, enabled)
 ```
 
-Remember, each method returns a promise which should be properly handled to ensure error situations are adequately addressed. Use `then-catch` or `async-await` with a try-catch block to handle the promises.
+The notification HTTP body will look like this:
 
-In all methods, replace the parameters like `mode`, `settings`, `uploadUri`, `filePath`, `printMode`, `jobId`, `operatedBy`, and `callbackUri` with actual values based on your context.
+```json
+{ 
+ "Param": { 
+  "JobId": "d318caa88966442faaee090f858aef35", 
+  "JobStatus": { 
+    "Status": "Pending", 
+    "StatusReason": "JobQueued", 
+    "UpdateDate": "2021/08/06 06:42:13" 
+  } 
+ } 
+}
+```
 
 ### Scanner
 
-The `Scanner` class provides methods for interacting with an Epson scanner:
+The `Scanner` class provides methods for interacting with an Epson scanner. These methods have not yet been tested. We welcome your contributions to improve them or to add unit tests.
 
 ```javascript
 const scanner = new Scanner(authContext);

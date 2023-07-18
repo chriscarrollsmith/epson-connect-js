@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { Client } = require('../Client.js');
+const { Client } = require('epson-connect-js');
 
 // Set the timeout for each test to 30 seconds
 jest.setTimeout(30000);
