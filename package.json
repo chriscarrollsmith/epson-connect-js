@@ -1,0 +1,22 @@
+{
+  "name": "epson-connect-js",
+  "version": "1.0.0",
+  "description": "",
+  "main": "Client.js",
+  "scripts": {
+    "test": "jest liveAPI.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.4.0",
+    "moment": "^2.29.4"
+  },
+  "devDependencies": {
+    "axios-mock-adapter": "^1.21.5",
+    "dotenv": "^16.3.1",
+    "jest": "^29.6.1",
+    "sinon": "^15.2.0"
+  }
+}
