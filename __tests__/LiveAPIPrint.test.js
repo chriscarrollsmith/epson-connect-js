@@ -58,7 +58,6 @@ test('Execute Print Job', async () => {
     }
 });
 
-
 test('Execute Complete Print Job', async () => {
     try {
         const response = await printer.print('./testpage.docx', settings)

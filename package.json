@@ -1,6 +1,6 @@
 {
   "name": "epson-connect-js",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A CommonJS library for connecting to the Epson Connect API",
   "main": "src/Client.js",
   "scripts": {

@@ -2,6 +2,7 @@
 
 const { URL, URLSearchParams } = require('url');
 const fs = require('fs');
+const axios = require('axios');
 const { AuthContext } = require('./Authenticate.js');
 const { mergeWithDefaultSettings, validateSettings } = require('./PrinterSettings');
 
@@ -72,11 +73,21 @@ class Printer {
     const path = urlObj.pathname + urlObj.search;
     
     const contentType = printMode === 'photo' ? 'image/jpeg' : 'application/octet-stream';
-    const data = await fs.promises.readFile(filePath);
     
-    const response = await this._authContext.send('post', path, data, { 'Content-Type': contentType, 'Content-Length': data.length.toString() });
+    let data;
     
-    return response;
+    if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+      // Use axios to fetch the file data as an arraybuffer
+      const response = await axios.get(filePath, { responseType: 'arraybuffer' });
+      data = Buffer.from(response.data, 'binary');
+    } else {
+      // It's a local file path, read the file using fs
+      data = await fs.promises.readFile(filePath);
+    }
+  
+    const uploadResponse = await this._authContext.send('post', path, data, { 'Content-Type': contentType, 'Content-Length': data.length.toString() });
+    
+    return uploadResponse;
   }
   
   async executePrint(jobId) {

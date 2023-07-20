@@ -49,7 +49,7 @@ afterAll(async () => {
 test('Define Print Job Settings', async () => {
     try {
         // Use the printer instance to set up a print job and capture the jobData object
-        constjobData = await printer.printSetting(settings);
+        const jobData = await printer.printSetting(settings);
         expect(jobData.id).toBeTruthy();
         expect(jobData.upload_uri).toBeTruthy();
         expect(jobData.settings).toBeTruthy();
