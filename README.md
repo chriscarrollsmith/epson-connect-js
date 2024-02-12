@@ -274,15 +274,17 @@ This functionality has not yet been tested. We welcome your contributions to imp
 
 ### Scanner
 
-The `Scanner` class provides methods for interacting with an Epson scanner. These methods have not yet been tested. We welcome your contributions to improve them or to add unit tests.
+Documents scanned with the Epson Connect API can be either uploaded to a url (such as a cloud storage bucket) or delivered to an email. The `Scanner` class provides methods for adding, updating, removing, and fetching a list of scanner destinations:
 
 ```javascript
-const scanner = new Scanner(authContext);
+const scanner = client.scanner;
 scanner.list();
 scanner.add(name, destination, type);
 scanner.update(id, name, destination, type);
 scanner.remove(id);
 ```
+
+Once you have added at least one destination, the destination will be available to select from the control panel of the physical scanner. If you select a destination and scan a document, the scanned document will be delivered to the selected destination.
 
 ## Error Handling
 

@@ -54,8 +54,9 @@ class Scanner {
   
   async remove(id_) {
     const data = { id: id_ };
-    await this._authContext.send('delete', this._path, data);
+    const resp = await this._authContext.send('delete', this._path, data);
     delete this._destination_cache[id_];
+    return resp;
   }
   
   _validateDestination(name, destination, type_) {

@@ -1,20 +1,18 @@
 require('dotenv').config();
 const { Client } = require('epson-connect-js');
 
-// Create variables to hold the client, printer, and scanner
+// Create variables to hold the client and printer
 let client;
 let printer;
-let scanner;
 
-// Create a client, printer, and scanner, to be used in all tests
+// Create a client and printer to be used in all tests
 beforeAll(async () => {
     try {
         client = new Client();
         await client.initialize();
 
-        // Get the printer and scanner
+        // Get the printer
         printer = client.printer;
-        scanner = client.scanner;
     } catch (error) {
         console.error("Error creating client: ", error);
         throw error;
