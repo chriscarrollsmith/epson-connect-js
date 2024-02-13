@@ -24,12 +24,19 @@ let settings = {
 // Create a client, printer, and scanner, to be used in all tests
 beforeAll(async () => {
     try {
+        // Create a client instance
         client = new Client();
         await client.initialize();
 
         // Get the printer and scanner
         printer = client.printer;
         scanner = client.scanner;
+
+        // Remove all scanner destinations if any exist
+        const scannerList = await scanner.list(true);
+        for (const dest of scannerList.destinations) {
+            await scanner.remove(dest.id);
+        }
 
         // Add a scanner destination for testing
         const name = 'Live Test Destination';
@@ -39,10 +46,20 @@ beforeAll(async () => {
     } catch (error) {
         console.error("Error creating client: ", error);
         throw error;
-    }
+    };
 });
 
 afterAll(async () => {
+    try {
+        // Remove all scanner destinations
+        const scannerList = await scanner.list(true);
+        for (const dest of scannerList.destinations) {
+            await scanner.remove(dest.id);
+        }
+    } catch (error) {
+        console.error("Error removing scanner destinations: ", error);
+        throw error;
+    }
     try {
         // Deauthenticate the client after all tests are complete
         await client.deauthenticate();
@@ -85,9 +102,30 @@ test('Add Scanner Destination', async () => {
         const destination = 'test@example.com';
         const type = 'mail';
         const response = await scanner.add(name, destination, type);
-        expect(response.message === 'Request was successful, but no data was returned.');
+        expect(response.alias_name === name);
+        expect(response.destination === destination);
+        expect(response.type === type);
+        expect(response.id).toBeTruthy();
     } catch (error) {
         console.error("Error adding scanner destination: ", error);
+        throw error;
+    }
+});
+
+// TODO: Add test for updating scanner destination
+test('Update Scanner Destination', async () => {
+    try {
+        const scannerList = await scanner.list(true);
+        const response = await scanner.update(
+                id = scannerList.destinations[0].id, alias_name = 'Updated Test Destination'
+            );
+        expect(response.id === scannerList.destinations[0].id);
+        expect(response.alias_name !== scannerList.destinations[0].alias_name);
+        expect(response.destination === scannerList.destinations[0].destination);
+        const updatedList = await scanner.list();
+        expect(updatedList.destinations.length === scannerList.destinations.length)
+    } catch (error) {
+        console.error("Error updating scanner destination: ", error);
         throw error;
     }
 });
