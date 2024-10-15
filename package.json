@@ -14,7 +14,7 @@
     "moment": "^2.29.4"
   },
   "devDependencies": {
-    "axios-mock-adapter": "^1.21.5",
+    "axios-mock-adapter": "^2.1.0",
     "dotenv": "^16.3.1",
     "jest": "^29.6.1",
     "sinon": "^18.0.0"
