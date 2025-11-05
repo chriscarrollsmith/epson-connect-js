@@ -1,10 +1,36 @@
-// Authenticate.js
+// Authenticate.ts
 
-const axios = require('axios');
-const moment = require('moment');
+import axios, { AxiosRequestConfig } from 'axios';
+import moment, { Moment } from 'moment';
 
-class AuthContext {
-  constructor(baseUrl, printerEmail, clientId, clientSecret) {
+interface AuthResponse {
+  token_type?: string;
+  access_token: string;
+  expires_in: number;
+  refresh_token?: string;
+  subject_type?: string;
+  subject_id: string;
+  error?: string;
+}
+
+interface AuthRequestData {
+  grant_type: string;
+  username?: string;
+  password?: string;
+  refresh_token?: string;
+}
+
+export class AuthContext {
+  private baseUrl: string;
+  private printerEmail: string;
+  private clientId: string;
+  private clientSecret: string;
+  private expiresAt: Moment;
+  private accessToken: string;
+  private refreshToken: string;
+  private subjectId: string;
+
+  constructor(baseUrl: string, printerEmail: string, clientId: string, clientSecret: string) {
     this.baseUrl = baseUrl;
     this.printerEmail = printerEmail;
     this.clientId = clientId;
@@ -16,11 +42,11 @@ class AuthContext {
     this.subjectId = '';
   }
 
-  async _initialize() {
+  async _initialize(): Promise<void> {
     await this._auth();
   }
 
-  async _auth() {
+  async _auth(): Promise<void> {
     const method = 'POST';
     const path = '/api/1/printing/oauth2/auth/token?subject=printer';
 
@@ -36,7 +62,7 @@ class AuthContext {
       password: this.clientSecret
     };
 
-    let data;
+    let data: AuthRequestData;
 
     if (this.accessToken === '') {
       data = {
@@ -52,7 +78,7 @@ class AuthContext {
     }
 
     try {
-      const body = await this.send(method, path, data, headers, auth);
+      const body = await this.send(method, path, data, headers, auth) as AuthResponse;
 
       const error = body.error;
 
@@ -61,7 +87,7 @@ class AuthContext {
       }
 
       // First time authenticating, set refresh_token
-      if (this.accessToken === '') {
+      if (this.accessToken === '' && body.refresh_token) {
         this.refreshToken = body.refresh_token;
       }
 
@@ -70,89 +96,93 @@ class AuthContext {
       this.subjectId = body.subject_id;
 
     } catch (e) {
-      throw new AuthenticationError(e);
+      throw new AuthenticationError(String(e));
     }
   }
 
-  async _deauthenticate() {
+  async _deauthenticate(): Promise<void> {
     const method = 'DELETE';
     const path = `/api/1/printing/printers/${this.subjectId}`;
     await this.send(method, path);
   }
 
-  async send(method, path, data = null, headers = null, auth = null) {
+  async send(
+    method: string,
+    path: string,
+    data: any = null,
+    headers: Record<string, string> | null = null,
+    auth: { username: string; password: string } | null = null
+  ): Promise<any> {
     if (!auth) {
       this._auth();
     }
-  
+
     headers = headers || this.defaultHeaders;
-    const request = {
-      method: method,
+    const request: AxiosRequestConfig = {
+      method: method as any,
       url: this.baseUrl + path,
       headers: headers,
       data: data,
-      auth: auth,
+      auth: auth || undefined,
     };
-  
+
     // Uncomment to debug requests
     // console.log(`${method} ${path} data=${JSON.stringify(data)} headers=${JSON.stringify(headers)} auth=${!!auth}`);
-  
+
     try {
       const resp = await axios(request);
       let respData = resp.data;
-  
+
       // Handle if response is not JSON
       if (resp.headers && resp.headers['content-type'] && resp.headers['content-type'].indexOf('application/json') === -1) {
         respData = { code: resp.data.toString() };
       }
-  
+
       // Uncomment to debug requests
       // console.log(`resp=${JSON.stringify(respData)}`);
-  
+
       if (!resp) {
         throw new ApiError('No response received from server');
-      } 
-  
+      }
+
       if (respData && respData.code) {
         throw new ApiError(respData.code);
       }
-  
+
       if (!respData || Object.keys(respData).length === 0) {
         return { message: 'Request was successful, but no data was returned.' };
-      } 
-  
+      }
+
       return respData;
-  
+
     } catch (error) {
       // Re-throw the error to be handled in higher scopes
       throw error;
     }
   }
 
-  get defaultHeaders() {
+  get defaultHeaders(): Record<string, string> {
     return {
       'Authorization': `Bearer ${this.accessToken}`,
       'Content-Type': 'application/json',
     };
   }
 
-  get deviceId() {
+  get deviceId(): string {
     return this.subjectId;
   }
 }
 
-class AuthenticationError extends Error {
-  constructor(message) {
+export class AuthenticationError extends Error {
+  constructor(message: string) {
     super(message);
     this.name = "AuthenticationError";
   }
 }
 
-class ApiError extends Error {
-  constructor(message) {
+export class ApiError extends Error {
+  constructor(message: string) {
     super(message);
     this.name = "ApiError";
   }
 }
-
-module.exports = { AuthContext, AuthenticationError, ApiError };

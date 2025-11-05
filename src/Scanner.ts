@@ -1,9 +1,29 @@
-//Scanner.js
+//Scanner.ts
 
-const { AuthContext } = require('./Authenticate.js');
+import { AuthContext } from './Authenticate';
 
-class Scanner {
-  constructor(authContext) {
+type DestinationType = 'mail' | 'url';
+
+interface Destination {
+  id: string;
+  alias_name: string;
+  destination: string;
+  type: DestinationType;
+}
+
+interface DestinationsResponse {
+  destinations: Destination[];
+}
+
+export class Scanner {
+  private _authContext: AuthContext;
+  private _path: string;
+  private _destination_cache: Record<string, Destination>;
+  private VALID_DESTINATION_TYPES: Set<DestinationType>;
+  private _ready: boolean;
+  private _readyPromise: Promise<void>;
+
+  constructor(authContext: AuthContext) {
     if (!(authContext instanceof AuthContext)) {
       throw new ScannerError('AuthContext instance required');
     }
@@ -12,13 +32,13 @@ class Scanner {
     this._path = `/api/1/scanning/scanners/${this._authContext.deviceId}/destinations`;
     this._destination_cache = {};
 
-    this.VALID_DESTINATION_TYPES = new Set(['mail', 'url']);
+    this.VALID_DESTINATION_TYPES = new Set<DestinationType>(['mail', 'url']);
 
     this._ready = false;
     this._readyPromise = this.init(); // Store the promise to allow awaiting it in other methods
   }
 
-  async init() {
+  private async init(): Promise<void> {
     try {
       await this.list();
       this._ready = true;
@@ -28,28 +48,28 @@ class Scanner {
     }
   }
 
-  async _ensureReady() {
+  private async _ensureReady(): Promise<void> {
     if (!this._ready) {
       await this._readyPromise;
     }
   }
-  
-  async list(useCache = false) {
+
+  async list(useCache = false): Promise<DestinationsResponse> {
     if (useCache) {
-        await this._ensureReady();
-        // Return the values from the cache
-        return { destinations: Object.values(this._destination_cache) };
+      await this._ensureReady();
+      // Return the values from the cache
+      return { destinations: Object.values(this._destination_cache) };
     } else {
-        const resp = await this._authContext.send('get', this._path);
-        // Clear the existing cache and re-populate it
-        this._destination_cache = {};
-        resp.destinations.forEach(dest => this._destination_cache[dest.id] = dest);
-        // Return the fresh list from the response
-        return resp;
+      const resp = await this._authContext.send('get', this._path) as DestinationsResponse;
+      // Clear the existing cache and re-populate it
+      this._destination_cache = {};
+      resp.destinations.forEach(dest => this._destination_cache[dest.id] = dest);
+      // Return the fresh list from the response
+      return resp;
     }
   }
-  
-  async add(alias_name, destination, type_ = 'mail') {
+
+  async add(alias_name: string, destination: string, type_: DestinationType = 'mail'): Promise<Destination> {
     await this._ensureReady();
     this._validateDestination(alias_name, destination, type_);
     const data = {
@@ -63,16 +83,20 @@ class Scanner {
     }
     const updatedList = await this.list();
     // Find the newly added destination in updatedList.destinations and return it
-    return updatedList.destinations.find(dest => dest.alias_name === alias_name);
+    const newDestination = updatedList.destinations.find(dest => dest.alias_name === alias_name);
+    if (!newDestination) {
+      throw new ScannerError('Failed to find newly added destination.');
+    }
+    return newDestination;
   }
-  
-  async update(id_, alias_name = null, destination = null, type_ = null) {
+
+  async update(id_: string, alias_name: string | null = null, destination: string | null = null, type_: DestinationType | null = null): Promise<Destination> {
     await this._ensureReady();
     const destCache = this._destination_cache[id_];
     if (!destCache) {
       throw new ScannerError('Scan destination is not yet registered.');
     }
-    const data = {
+    const data: Destination = {
       id: id_,
       alias_name: alias_name || destCache.alias_name,
       destination: destination || destCache.destination,
@@ -86,16 +110,16 @@ class Scanner {
     this._destination_cache[id_] = data;
     return data;
   }
-  
-  async remove(id_) {
+
+  async remove(id_: string): Promise<any> {
     await this._ensureReady();
     const data = { id: id_ };
     const resp = await this._authContext.send('delete', this._path, data);
     delete this._destination_cache[id_];
     return resp;
   }
-  
-  _validateDestination(alias_name, destination, type_) {
+
+  private _validateDestination(alias_name: string, destination: string, type_: DestinationType): void {
     if (alias_name.length < 1 || alias_name.length > 32) {
       throw new ScannerError('Scan destination name too long.');
     }
@@ -108,6 +132,9 @@ class Scanner {
   }
 }
 
-class ScannerError extends Error {}
-
-module.exports = { Scanner, ScannerError };
+export class ScannerError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ScannerError';
+  }
+}
