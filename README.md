@@ -1,6 +1,6 @@
 # Epson Connect JS
 
-A JavaScript library for interacting with the Epson Connect API. This library provides a set of methods for authentication and various printer and scanner functionalities.
+A TypeScript/JavaScript library for interacting with the Epson Connect API. This library provides a set of methods for authentication and various printer and scanner functionalities, with full TypeScript type definitions.
 
 ## Installation
 
@@ -30,33 +30,172 @@ Here's what it will look like as a dependency in `package.json`:
 }
 ```
 
+## Quick Start
+
+Here are complete examples to get you started quickly:
+
+### JavaScript Example
+
+```javascript
+const { Client } = require('epson-connect-js');
+
+async function main() {
+  // Create and initialize the client
+  const client = new Client(
+    'printer@example.com',  // Your printer email
+    'your-client-id',        // Your client ID
+    'your-client-secret'     // Your client secret
+  );
+
+  await client.initialize();
+
+  // Print a document
+  const printer = client.printer;
+  const jobId = await printer.print('./document.pdf', {
+    print_mode: 'document',
+    print_setting: {
+      media_size: 'ms_a4',
+      print_quality: 'normal',
+      copies: 1
+    }
+  });
+
+  console.log('Print job started:', jobId);
+
+  // Clean up
+  await client.deauthenticate();
+}
+
+main().catch(console.error);
+```
+
+### TypeScript Example
+
+```typescript
+import { Client, PrintSettings } from 'epson-connect-js';
+
+async function main(): Promise<void> {
+  // Create and initialize the client
+  const client = new Client(
+    'printer@example.com',  // Your printer email
+    'your-client-id',        // Your client ID
+    'your-client-secret'     // Your client secret
+  );
+
+  await client.initialize();
+
+  // Print a document with type-safe settings
+  const printer = client.printer;
+  const settings: PrintSettings = {
+    print_mode: 'document',
+    print_setting: {
+      media_size: 'ms_a4',
+      print_quality: 'normal',
+      copies: 1
+    }
+  };
+
+  const jobId: string = await printer.print('./document.pdf', settings);
+  console.log('Print job started:', jobId);
+
+  // Clean up
+  await client.deauthenticate();
+}
+
+main().catch(console.error);
+```
+
+## Language Support
+
+This library is written in TypeScript and compiled to JavaScript, making it fully compatible with both:
+
+### JavaScript Users
+- Works with CommonJS (`require`) and ES Modules (`import`)
+- No additional setup required - install and use immediately
+- Compatible with Node.js projects
+
+### TypeScript Users
+- Full type definitions included out of the box
+- No need for separate `@types` packages
+- **Type safety**: Catch errors at compile time instead of runtime
+- **IntelliSense**: Auto-completion and inline documentation in your IDE
+- **Type inference**: Automatic type detection for better code navigation
+
+All exported types, interfaces, and enums are available for import:
+
+```typescript
+import {
+  Client,
+  Printer,
+  Scanner,
+  PrintSettings,
+  PrintSetting,
+  PrintMode,
+  MediaSize,
+  MediaType,
+  PrintQuality,
+  PaperSource,
+  ColorMode,
+  TwoSided,
+  ClientError,
+  PrinterError,
+  ScannerError,
+  AuthenticationError,
+  ApiError,
+} from 'epson-connect-js';
+```
+
 ## Usage
 
 This library provides a set of classes that correspond to the different aspects of the Epson Connect API. The `Client` class is the primary interface for interacting with the API, and it manages authentication and provides access to printer and scanner functionality. The `Printer` and `Scanner` classes provide methods for interacting with the printer and scanner functionalities of the API respectively. Please ensure you have a good understanding of the asynchronous nature of JavaScript to effectively use this library, as many operations rely on Promises and should be properly awaited or handled.
 
 ### Client
 
-In your JavaScript files, `import` or `require` the `Client` module from the library as follows:
+#### Importing the Client
 
+**JavaScript (CommonJS):**
 ```javascript
 const { Client } = require('epson-connect-js');
 ```
 
+**TypeScript or ES Modules:**
+```typescript
+import { Client } from 'epson-connect-js';
+```
+
+#### Creating a Client Instance
+
 You will need to construct an object of the `Client` class with the arguments `printerEmail`, `clientId`, `clientSecret`. Alternatively, you can set the environment variables `EPSON_CONNECT_API_PRINTER_EMAIL`,`EPSON_CONNECT_API_CLIENT_ID`, and `EPSON_CONNECT_API_CLIENT_SECRET`. Note that you will have to register for a license with the [Epson Connect API](https://www.epsondevelopers.com/api/epson-connect/) in order to obtain these credentials. (The `baseUrl` argument of the `Client` class is optional, and if not provided, the default value of `https://api.epsonconnect.com` will be used.)
 
+**JavaScript:**
 ```javascript
-  // printerEmail, clientId, and clientSecret must be obtained from Epson
-  const printerEmail = 'printerid@someemail.com' 
-  const clientId = 'someclientid'
-  const clientSecret = 'someclientsecret'
-  const baseUrl = 'https://api.epsonconnect.com'
+// printerEmail, clientId, and clientSecret must be obtained from Epson
+const printerEmail = 'printerid@someemail.com';
+const clientId = 'someclientid';
+const clientSecret = 'someclientsecret';
+const baseUrl = 'https://api.epsonconnect.com';
 
-  // If no baseUrl is provided, the default will be 'https://api.epsonconnect.com'
-  const client = new Client(printerEmail, clientId, clientSecret, baseUrl); 
-  ```
+// If no baseUrl is provided, the default will be 'https://api.epsonconnect.com'
+const client = new Client(printerEmail, clientId, clientSecret, baseUrl);
+```
+
+**TypeScript:**
+```typescript
+// printerEmail, clientId, and clientSecret must be obtained from Epson
+const printerEmail: string = 'printerid@someemail.com';
+const clientId: string = 'someclientid';
+const clientSecret: string = 'someclientsecret';
+const baseUrl: string = 'https://api.epsonconnect.com';
+
+// If no baseUrl is provided, the default will be 'https://api.epsonconnect.com'
+const client = new Client(printerEmail, clientId, clientSecret, baseUrl);
+```
+
+#### Initializing the Client
 
 The `initialize()` method of the `Client` class is responsible for initiating the authentication process, and it must be awaited, as it's an asynchronous operation.
 
+**JavaScript:**
 ```javascript
 (async () => {
   // Initiate the authentication process
@@ -66,8 +205,19 @@ The `initialize()` method of the `Client` class is responsible for initiating th
 })();
 ```
 
-Alternatively, to speed up execution, you can save the returned Promise directly with `.catch()` and await it later in your code. This is useful if you want to authenticate at application startup but you don't need to use the printer or scanner until later. For example:
+**TypeScript:**
+```typescript
+(async (): Promise<void> => {
+  // Initiate the authentication process
+  await client.initialize();
 
+  // Now that we're authenticated, we can scan, print, and deauthenticate here
+})();
+```
+
+Alternatively, to speed up execution, you can save the returned Promise directly with `.catch()` and await it later in your code. This is useful if you want to authenticate at application startup but you don't need to use the printer or scanner until later:
+
+**JavaScript:**
 ```javascript
 // Construct the client as part of application startup
 const client = new Client(printerEmail, clientId, clientSecret, baseUrl);
@@ -79,6 +229,25 @@ const initializePromise = client.initialize().catch((error) => {
 
 // Later in your code, you might have a function triggered by a user action
 async function handlePrintRequest() {
+  // Wait for the client to finish initializing before attempting to print
+  await initializePromise;
+
+  // Now that we're authenticated, we can scan, print, and deauthenticate here
+}
+```
+
+**TypeScript:**
+```typescript
+// Construct the client as part of application startup
+const client = new Client(printerEmail, clientId, clientSecret, baseUrl);
+
+// Save the initialization promise for later use
+const initializePromise = client.initialize().catch((error: Error) => {
+  console.error('Error initializing client:', error);
+});
+
+// Later in your code, you might have a function triggered by a user action
+async function handlePrintRequest(): Promise<void> {
   // Wait for the client to finish initializing before attempting to print
   await initializePromise;
 
@@ -130,12 +299,13 @@ You can now interact with the printer. Remember, each `printer` method returns a
 
 The simplest way to execute a complete print operation, including setting up the print job, uploading the file, and executing the print job, is the `print(filePath, settings)` method:
 
+**JavaScript:**
 ```javascript
 // Set the path of the file to print
-const filePath = './path/to/file.pdf'
+const filePath = './path/to/file.pdf';
 
 // Define your print job settings
-let settings = {
+const settings = {
   job_name: "MyFirstPrintJob",
   print_mode: "document",
   print_setting: {
@@ -153,10 +323,49 @@ let settings = {
 };
 
 // Execute the print operation
-const jobId = await printer.print(filePath, settings)
+const jobId = await printer.print(filePath, settings);
+```
+
+**TypeScript:**
+```typescript
+import { PrintSettings } from 'epson-connect-js';
+
+// Set the path of the file to print
+const filePath: string = './path/to/file.pdf';
+
+// Define your print job settings with type safety
+const settings: PrintSettings = {
+  job_name: "MyFirstPrintJob",
+  print_mode: "document",
+  print_setting: {
+    media_size: "ms_a4",
+    media_type: "mt_plainpaper",
+    borderless: false,
+    print_quality: "normal",
+    source: "auto",
+    color_mode: "color",
+    two_sided: "none",
+    reverse_order: false,
+    copies: 1,
+    collate: true
+  }
+};
+
+// Execute the print operation
+const jobId: string = await printer.print(filePath, settings);
 ```
 
 This method returns a `jobId` which can be used to get information about the print job or cancel the print job (see below).
+
+**TypeScript Type Information:**
+If you're using TypeScript, the library provides type definitions for all settings. The available types include:
+- `PrintMode`: `'document' | 'photo'`
+- `MediaSize`: `'ms_a3' | 'ms_a4' | 'ms_a5' | 'ms_a6'` and more
+- `MediaType`: `'mt_plainpaper' | 'mt_photopaper' | 'mt_hagaki'` and more
+- `PrintQuality`: `'high' | 'normal' | 'draft'`
+- `ColorMode`: `'color' | 'mono'`
+- `TwoSided`: `'none' | 'long' | 'short'`
+- `PaperSource`: `'auto' | 'rear' | 'front1' | 'front2'` and more
 
 #### Getting Printer Info
 
@@ -288,4 +497,145 @@ Once you have added at least one destination, the destination will be available 
 
 ## Error Handling
 
-The library defines a set of custom error types (`ClientError`, `AuthenticationError`, `ApiError`, `PrinterError`, `PrintSettingError`, `ScannerError`) to provide detailed error information.
+The library defines a set of custom error types to provide detailed error information:
+- `ClientError` - Errors related to client initialization
+- `AuthenticationError` - Errors during authentication
+- `ApiError` - Errors from API responses
+- `PrinterError` - Errors related to printer operations
+- `PrintSettingError` - Errors in print settings validation
+- `ScannerError` - Errors related to scanner operations
+
+**JavaScript:**
+```javascript
+const { Client, ClientError, PrinterError } = require('epson-connect-js');
+
+try {
+  const client = new Client(printerEmail, clientId, clientSecret);
+  await client.initialize();
+
+  const printer = client.printer;
+  const jobId = await printer.print('./document.pdf');
+
+} catch (error) {
+  if (error instanceof ClientError) {
+    console.error('Client initialization error:', error.message);
+  } else if (error instanceof PrinterError) {
+    console.error('Printer error:', error.message);
+  } else {
+    console.error('Unexpected error:', error);
+  }
+}
+```
+
+**TypeScript:**
+```typescript
+import {
+  Client,
+  ClientError,
+  PrinterError,
+  AuthenticationError,
+  ApiError
+} from 'epson-connect-js';
+
+try {
+  const client = new Client(printerEmail, clientId, clientSecret);
+  await client.initialize();
+
+  const printer = client.printer;
+  const jobId: string = await printer.print('./document.pdf');
+
+} catch (error) {
+  if (error instanceof ClientError) {
+    console.error('Client initialization error:', error.message);
+  } else if (error instanceof AuthenticationError) {
+    console.error('Authentication error:', error.message);
+  } else if (error instanceof PrinterError) {
+    console.error('Printer error:', error.message);
+  } else if (error instanceof ApiError) {
+    console.error('API error:', error.message);
+  } else {
+    console.error('Unexpected error:', error);
+  }
+}
+```
+
+## Development
+
+This library is written in TypeScript and compiled to JavaScript. If you want to contribute or build from source, follow these steps:
+
+### Prerequisites
+
+- Node.js (version 16 or higher recommended)
+- npm or yarn
+
+### Building from Source
+
+1. Clone the repository:
+```bash
+git clone https://github.com/chriscarrollsmith/epson-connect-js.git
+cd epson-connect-js
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Build the TypeScript source:
+```bash
+npm run build
+```
+
+This will compile the TypeScript files in `src/` to JavaScript in `dist/`, including type definition files (`.d.ts`).
+
+### Available Scripts
+
+- `npm run build` - Compile TypeScript to JavaScript
+- `npm run clean` - Remove the compiled `dist/` directory
+- `npm test` - Run the test suite
+- `npm run prepare` - Automatically runs before publishing (builds the project)
+
+### Project Structure
+
+```
+epson-connect-js/
+├── src/              # TypeScript source files
+│   ├── Client.ts
+│   ├── Printer.ts
+│   ├── Scanner.ts
+│   ├── Authenticate.ts
+│   ├── PrinterSettings.ts
+│   └── index.ts
+├── dist/             # Compiled JavaScript (generated)
+├── __tests__/        # Test files
+├── tsconfig.json     # TypeScript configuration
+├── jest.config.js    # Jest test configuration
+└── package.json
+```
+
+### TypeScript Configuration
+
+The project uses strict TypeScript settings for better type safety:
+- Strict mode enabled
+- Declaration files generated automatically
+- Source maps included for debugging
+- Target: ES2020
+- Module: CommonJS
+
+### Contributing
+
+Contributions are welcome! When contributing:
+
+1. Write your code in TypeScript (in the `src/` directory)
+2. Ensure the build passes: `npm run build`
+3. Run tests: `npm test`
+4. Follow the existing code style
+5. Update documentation as needed
+
+## License
+
+ISC
+
+## Support
+
+For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/chriscarrollsmith/epson-connect-js).
